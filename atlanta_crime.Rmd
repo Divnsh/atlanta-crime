@@ -1,0 +1,124 @@
+---
+title: "Crime in Atlanta"
+runtime: shiny
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    vertical_layout: fill
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(dplyr)
+library(ggplot2)
+c = read.csv("Crime in Atlanta 2009-2017.csv")
+```
+
+Select menu {.sidebar} 
+======================================================================
+
+### Crime Select
+
+```{r}
+selectInput(inputId = 'Crimes', label='Select a crime', choices = c(as.character(unique(c$crime)), 'All'), selected='All')
+```
+
+Charts
+====================================================================================
+
+Row
+-----------------------------------------------------------------------
+
+### Lolipop
+
+```{r}
+
+ 
+
+#### Objective is to identified which month had highest count of crime and ploting them on lollipop chart
+
+renderPlot({
+
+c$date = as.Date(c$date, format = "%m/%d/%Y")
+
+
+c$Month = format(c$date, "%b")
+
+
+  
+  data = {
+if(input$Crimes != 'All'){
+  data1 = filter(c, c$crime==input$Crimes)
+} else {
+  data1 = c
+}
+    data1
+  }
+
+crime_month_wise = data %>% group_by(Month) %>% summarise(Count = n()) 
+
+# Ploting lollipop chart
+
+  ggplot(crime_month_wise, aes(x= Month, y=Count)) + geom_point(size=5, color = 'red' ) + 
+  geom_segment(aes(x=Month, xend=Month, y=0, yend=Count), color = 'green') + 
+  labs(title="Lollipop Chart", subtitle="Month Wise Chart", 
+       caption="source: Data.World") + scale_x_discrete(limits = month.abb)
+})
+
+```
+
+
+Row
+----------------------------------------------------------------------------------------
+### Diverging Bars
+```{r}
+############# Diverging Bars #######################################################################
+# Data Set used: Crime in Atlanta 2009-2017
+
+# Source of Data : data.world
+
+# Problem Statement: Objective is to identifiy the months with below average and above average crime
+
+# The Crime count from crime_month_wise dataset is normalised by computing the z score. 
+
+# Those Months with Crime Count above Average are marked green and those below are marked red.
+
+# Lets calculate the z score
+
+
+
+renderPlot({
+c$date = as.Date(c$date, format = "%m/%d/%Y")
+c$Month = format(c$date, "%b")
+  data = {
+if(input$Crimes != 'All'){
+  data1 = filter(c, c$crime==input$Crimes)
+} else {
+  data1 = c
+}
+    data1
+  }
+
+crime_month_wise = data %>% group_by(Month) %>% summarise(Count = n()) 
+crime_month_wise$Count_z = round((crime_month_wise$Count - mean(crime_month_wise$Count))/sd(crime_month_wise$Count), 2)  
+
+
+# Above/Below average flag
+crime_month_wise$Avg_type = ifelse(crime_month_wise$Count_z < 0, "below", "above")  
+
+# Sorting the data based on Normilized value column
+crime_month_wise = arrange(crime_month_wise, Count_z)  
+
+# Ploting
+ggplot(crime_month_wise, aes(x= Month, y= Count_z, label= Count_z)) +
+  geom_bar(stat='identity', aes(fill=Avg_type), width=.5) + 
+  scale_fill_manual(name="Crime", 
+                    labels = c("Above Average", "Below Average"), 
+                    values = c("above"="Red", "below"="Green")) + 
+  labs(subtitle="Avg. Crime Month Wise", 
+       title= "Diverging Bars", x = "Month", y = "Normilized Crime Rate") + scale_x_discrete(limits = month.abb)
+})
+
+
+```
+

@@ -1,0 +1,12 @@
+name: atlanta_crime
+title: atlanta_crime
+username:
+account: divyansh12
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 250174
+bundleId: 1142304
+url: https://divyansh12.shinyapps.io/atlanta_crime/
+when: 1513666383.18324
+asMultiple: FALSE
+asStatic: FALSE
